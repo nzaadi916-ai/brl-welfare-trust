@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image Configuration Manager - BRL Welfare Trust</title>
+  <link rel="icon" href="brtlogo.jpeg" type="image/jpeg">
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="css/styles.css">
+  
+  <style>
+    /* Custom style overrides for Image Manager Dashboard (modern dark grid style) */
+    body {
+      background-color: #0f172a;
+      color: #f1f5f9;
+    }
+    header {
+      background-color: #1e293b;
+      border-bottom-color: rgba(255,255,255,0.05);
+    }
+    .logo-title {
+      color: #f1f5f9 !important;
+    }
+    .page-header {
+      background-color: #1e293b;
+      border-bottom-color: rgba(255,255,255,0.05);
+      color: #ffffff;
+    }
+    .page-header-title {
+      color: #ffffff;
+    }
+    
+    .manager-controls-bar {
+      background-color: #1e293b;
+      padding: 20px;
+      border-radius: var(--radius-md);
+      margin-bottom: 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+    
+    .stats-flex {
+      display: flex;
+      gap: 20px;
+    }
+    .stat-pill {
+      background-color: #334155;
+      padding: 6px 16px;
+      border-radius: var(--radius-pill);
+      font-size: 13px;
+      font-weight: 700;
+    }
+    
+    .manager-grid {
+      display: grid;
+      grid-template-cols: repeat(4, 1fr);
+      gap: 24px;
+      margin-bottom: 50px;
+    }
+    
+    .manager-card {
+      background-color: #1e293b;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    
+    .manager-card.is-blocked {
+      border-color: var(--color-crimson);
+      opacity: 0.6;
+    }
+    
+    .manager-img-box {
+      position: relative;
+      aspect-ratio: 4/3;
+      background-color: #0f172a;
+      overflow: hidden;
+    }
+    
+    .manager-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .manager-card-info {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      flex-grow: 1;
+    }
+    
+    .manager-filename {
+      font-family: monospace;
+      font-size: 11px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: #94a3b8;
+    }
+    
+    .manager-select {
+      width: 100%;
+      padding: 8px 12px;
+      background-color: #334155;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: var(--radius-sm);
+      color: #f1f5f9;
+      font-size: 12.5px;
+      outline: none;
+    }
+    
+    .block-toggle-btn {
+      width: 100%;
+      padding: 10px;
+      background-color: #334155;
+      border: none;
+      color: #f1f5f9;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .block-toggle-btn:hover {
+      background-color: #475569;
+    }
+    
+    .is-blocked .block-toggle-btn {
+      background-color: var(--color-crimson);
+    }
+    .is-blocked .block-toggle-btn:hover {
+      background-color: var(--color-crimson-light);
+    }
+    
+    .export-modal {
+      position: fixed;
+      inset: 0;
+      background-color: rgba(15,23,42,0.85);
+      backdrop-filter: blur(8px);
+      z-index: 12000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .export-modal.active {
+      display: flex;
+    }
+    .modal-content {
+      background-color: #1e293b;
+      border-radius: var(--radius-lg);
+      padding: 40px;
+      max-width: 720px;
+      width: 100%;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .code-textarea {
+      width: 100%;
+      height: 300px;
+      background-color: #0f172a;
+      color: #38bdf8;
+      font-family: monospace;
+      padding: 16px;
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(255,255,255,0.15);
+      margin: 20px 0;
+      outline: none;
+      font-size: 12px;
+    }
+    
+    @media (max-width: 1024px) {
+      .manager-grid { grid-template-cols: repeat(3, 1fr); }
+    }
+    @media (max-width: 768px) {
+      .manager-grid { grid-template-cols: repeat(2, 1fr); }
+    }
+    @media (max-width: 480px) {
+      .manager-grid { grid-template-cols: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="container nav-bar">
+      <a href="index.html" class="logo-link">
+        <img src="brtlogo.jpeg" alt="BRL Welfare Trust Logo" class="logo-img">
+        <div class="logo-text">
+          <span class="logo-title">Bilqees Razia Laghari</span>
+          <span class="logo-subtitle">Welfare Trust</span>
+        </div>
+      </a>
+      <span style="font-family:var(--font-headings); font-weight:800; font-size:12px; letter-spacing:0.1em; color:var(--color-secondary); border: 1px solid var(--color-secondary); padding: 4px 12px; border-radius: var(--radius-pill);">
+        LOCAL HELPER TOOL
+      </span>
+    </div>
+  </header>
+
+  <main style="flex: 1;">
+    <section class="page-header">
+      <div class="container">
+        <div class="page-header-breadcrumbs">Helper Dashboard</div>
+        <h1 class="page-header-title">Image Configuration Manager</h1>
+      </div>
+    </section>
+
+    <section class="section-padding">
+      <div class="container">
+        <!-- Controls Bar -->
+        <div class="manager-controls-bar">
+          <div class="stats-flex">
+            <div class="stat-pill">Total Images: <span id="total-lbl">0</span></div>
+            <div class="stat-pill" style="color:var(--color-primary-light);">Active: <span id="active-lbl">0</span></div>
+            <div class="stat-pill" style="color:var(--color-crimson-light);">Blocked: <span id="blocked-lbl">0</span></div>
+          </div>
+          
+          <div style="display:flex; gap:12px;">
+            <button class="btn btn-secondary" onclick="exportConfig()" style="box-shadow:none;">Export js/images-config.js</button>
+            <button class="btn btn-outline" onclick="resetConfig()" style="border-color:#334155; color:#94a3b8;">Reset to Default</button>
+          </div>
+        </div>
+
+        <!-- Dashboard Image Grid -->
+        <div class="manager-grid" id="manager-grid">
+          <!-- Injected via JavaScript -->
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Export Code Modal -->
+  <div class="export-modal" id="export-modal">
+    <div class="modal-content">
+      <h3 style="font-size:20px; font-weight:800; margin-bottom:8px;">Export Configuration</h3>
+      <p style="font-size:13.5px; color:#94a3b8;">Copy the code block below and replace the entire content of <strong style="color:#ffffff;">js/images-config.js</strong> in your folder.</p>
+      
+      <textarea class="code-textarea" id="code-box" readonly onclick="this.select()"></textarea>
+      
+      <div style="display:flex; justify-content:flex-end; gap:16px;">
+        <button class="btn btn-outline" onclick="closeModal()" style="border-color:#334155; color:#94a3b8;">Close</button>
+        <button class="btn btn-primary" onclick="copyCode()">Copy to Clipboard</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/images-data.js"></script>
+  <script src="js/images-config.js"></script>
+  
+  <script>
+    // Local configuration store derived from config file and local storage overrides
+    let currentConfig = getImagesConfig();
+    
+    // Available categories mapping
+    const categoriesList = [
+      { id: "uncategorized", label: "Uncategorized / General Pool" },
+      { id: "combine-marriages", label: "Combined Marriages" },
+      { id: "computer-education", label: "Computer Education" },
+      { id: "eye-camps", label: "Free Eye-Care Camps" },
+      { id: "medical-camps", label: "General Medical Camps" },
+      { id: "hand-pumps", label: "Clean Water (Hand Pumps)" },
+      { id: "school-furniture", label: "School Furniture" },
+      { id: "volunteers", label: "Volunteers & Mobilization" },
+      { id: "flood-relief", label: "Flood Relief / Ration Drives" }
+    ];
+    
+    document.addEventListener('DOMContentLoaded', () => {
+      renderManagerGrid();
+      updateStats();
+    });
+    
+    function renderManagerGrid() {
+      const grid = document.getElementById('manager-grid');
+      grid.innerHTML = '';
+      
+      if (typeof IMAGES_DATA === 'undefined') {
+        grid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding:48px; color:var(--color-crimson);">Error: IMAGES_DATA is undefined. Make sure js/images-data.js is loaded properly.</div>`;
+        return;
+      }
+      
+      IMAGES_DATA.forEach((imgName, index) => {
+        const isBlocked = currentConfig.blocked.includes(imgName);
+        const activeCategory = currentConfig.categories[imgName] || "uncategorized";
+        
+        const card = document.createElement('div');
+        card.className = `manager-card ${isBlocked ? 'is-blocked' : ''}`;
+        card.dataset.filename = imgName;
+        
+        // Build Select Options dropdown
+        let selectOptions = "";
+        categoriesList.forEach(cat => {
+          selectOptions += `<option value="${cat.id}" ${activeCategory === cat.id ? 'selected' : ''}>${cat.label}</option>`;
+        });
+        
+        card.innerHTML = `
+          <div class="manager-img-box">
+            <img class="manager-img" src="${imgName}" alt="Thumbnail" loading="lazy">
+          </div>
+          <div class="manager-card-info">
+            <div class="manager-filename" title="${imgName}">${imgName}</div>
+            
+            <div>
+              <label style="display:block; font-size:10px; font-weight:800; text-transform:uppercase; color:#94a3b8; margin-bottom:4px;">Assign Category</label>
+              <select class="manager-select" onchange="updateImageCategory('${imgName}', this.value)">
+                ${selectOptions}
+              </select>
+            </div>
+            
+            <button class="block-toggle-btn" onclick="toggleBlockImage('${imgName}', this)">
+              ${isBlocked ? 'Hidden (Blurry/Army)' : 'Show on Website'}
+            </button>
+          </div>
+        `;
+        
+        grid.appendChild(card);
+      });
+    }
+    
+    function updateStats() {
+      if (typeof IMAGES_DATA === 'undefined') return;
+      const total = IMAGES_DATA.length;
+      const blocked = currentConfig.blocked.length;
+      const active = total - blocked;
+      
+      document.getElementById('total-lbl').textContent = total;
+      document.getElementById('active-lbl').textContent = active;
+      document.getElementById('blocked-lbl').textContent = blocked;
+    }
+    
+    function updateImageCategory(filename, category) {
+      if (category === 'uncategorized') {
+        delete currentConfig.categories[filename];
+      } else {
+        currentConfig.categories[filename] = category;
+      }
+      saveConfigState();
+    }
+    
+    function toggleBlockImage(filename, btnElement) {
+      const card = btnElement.closest('.manager-card');
+      const idx = currentConfig.blocked.indexOf(filename);
+      
+      if (idx === -1) {
+        currentConfig.blocked.push(filename);
+        card.classList.add('is-blocked');
+        btnElement.textContent = 'Hidden (Blurry/Army)';
+      } else {
+        currentConfig.blocked.splice(idx, 1);
+        card.classList.remove('is-blocked');
+        btnElement.textContent = 'Show on Website';
+      }
+      
+      saveConfigState();
+      updateStats();
+    }
+    
+    function saveConfigState() {
+      saveImagesConfig(currentConfig);
+    }
+    
+    function resetConfig() {
+      if (confirm("Are you sure you want to reset all custom tags and blocked images to default configuration?")) {
+        localStorage.removeItem('brl_images_config');
+        currentConfig = getImagesConfig();
+        renderManagerGrid();
+        updateStats();
+      }
+    }
+    
+    function exportConfig() {
+      // Stringify config into the precise format of js/images-config.js
+      const configJS = `// Image configuration details for BRL Welfare Trust website
+// This file stores which images are shown, which are hidden, and their categories.
+// You can edit this file directly or export from image-manager.html.
+
+const DEFAULT_IMAGES_CONFIG = ${JSON.stringify(currentConfig, null, 2)};
+
+// Helper functions to manage configurations in the browser
+function getImagesConfig() {
+  const localConfig = localStorage.getItem('brl_images_config');
+  if (localConfig) {
+    try {
+      return JSON.parse(localConfig);
+    } catch (e) {
+      console.error("Failed to parse local image config, falling back to default.", e);
+    }
+  }
+  return DEFAULT_IMAGES_CONFIG;
+}
+
+function saveImagesConfig(config) {
+  localStorage.setItem('brl_images_config', JSON.stringify(config));
+}
+`;
+      
+      const codeBox = document.getElementById('code-box');
+      codeBox.value = configJS;
+      
+      document.getElementById('export-modal').classList.add('active');
+    }
+    
+    function closeModal() {
+      document.getElementById('export-modal').classList.remove('active');
+    }
+    
+    function copyCode() {
+      const codeBox = document.getElementById('code-box');
+      codeBox.select();
+      document.execCommand('copy');
+      alert('Configuration code copied to clipboard! Paste it inside js/images-config.js to persist your changes.');
+      closeModal();
+    }
+  </script>
+</body>
+</html>
